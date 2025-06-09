@@ -11,6 +11,8 @@ export default function HomePage() {
     benchChampionIds: null,
   });
 
+  const [recommendation, setRecommendation] = useState<string[] | null>(null);
+
   useEffect(() => {
     if (!window.electronAPI) {
       console.log("electronAPI is undefined");
@@ -28,11 +30,43 @@ export default function HomePage() {
     };
 
     fetchStatus();
-
     const interval = setInterval(fetchStatus, 2000);
-
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    const tryPrediction = async () => {
+      const selectedNames =
+        status.champions?.map((c) => championIdMap[c.championId]) || [];
+      const benchNames =
+        status.benchChampionIds?.map((id) => championIdMap[id]) || [];
+
+      const allChampions = [...selectedNames, ...benchNames];
+
+      if (allChampions.length >= 5) {
+        try {
+          const res = await fetch("http://localhost:5001/predict", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ champions: allChampions }),
+          });
+
+          const json = await res.json();
+          console.log("추천 조합:", json);
+          setRecommendation(json.recommendation);
+        } catch (err) {
+          console.error("추천 요청 실패:", err);
+          setRecommendation(null);
+        }
+      } else {
+        setRecommendation(null);
+      }
+    };
+
+    tryPrediction();
+  }, [status]);
 
   return (
     <div className="space-y-8 mt-6 max-w-md mx-auto bg-gray-900 p-6 rounded-lg shadow-lg">
@@ -88,10 +122,29 @@ export default function HomePage() {
               className="text-purple-300 font-semibold hover:text-purple-100 transition-colors"
               key={`bench-${idx}`}
             >
-              챔피언 ID <span className="font-bold">{championIdMap[id]}</span>
+              챔피언 ID{" "}
+              <span className="font-bold">{championIdMap[id]}</span>
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* 추천 조합 */}
+      <section className="bg-gray-800 rounded-md p-4 shadow-inner">
+        <h3 className="text-yellow-300 text-xl font-bold mb-3 border-b border-yellow-400 pb-1">
+          추천 조합
+        </h3>
+        {recommendation && recommendation.length > 0 ? (
+          <ul className="list-disc list-inside text-gray-100 space-y-2">
+            {recommendation.map((name, idx) => (
+              <li key={`rec-${idx}`} className="text-white font-semibold">
+                - {name}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-400 italic">추천 조합을 계산 중입니다...</p>
+        )}
       </section>
     </div>
   );
