@@ -1,32 +1,36 @@
-// app/layout.tsx
-import "./globals.css";
+import Navbar from "@/components/navbar";
+
+import "../styles/globals.css";
+import { ThemeProvider } from "next-themes";
 
 export const metadata = {
   title: "롤 클라이언트 상태 모니터",
   description: "롤 클라이언트 실행 및 칼바람 나락 상태 실시간 모니터링",
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) => {
   return (
-    <html lang="ko" className="scroll-smooth">
-      <head />
-      <body className="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
-        <header className="bg-gray-800 border-b border-gray-700 p-4 text-white text-center font-bold text-xl">
-          롤 클라이언트 상태 모니터
-        </header>
-
-        <main className="bg-gray-900 flex-grow mx-auto w-full p-6">
-          {children}
-        </main>
-
-        <footer className="bg-gray-800 border-t border-gray-700 text-gray-400 text-center p-4 text-sm">
-          &copy; {new Date().getFullYear()} Your Company. All rights reserved.
-        </footer>
+    <html lang="ko" suppressHydrationWarning>
+      <head></head>
+      <body className="font-pretendard bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

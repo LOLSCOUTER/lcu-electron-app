@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ChampSelectInfo } from "../../types/common";
 import { championIdMap } from "../../types/champion";
 
-export default function HomePage() {
+const HomePage = () => {
   const [status, setStatus] = useState<ChampSelectInfo>({
     champions: null,
     localCellId: null,
@@ -122,8 +122,7 @@ export default function HomePage() {
               className="text-purple-300 font-semibold hover:text-purple-100 transition-colors"
               key={`bench-${idx}`}
             >
-              챔피언 ID{" "}
-              <span className="font-bold">{championIdMap[id]}</span>
+              챔피언 ID <span className="font-bold">{championIdMap[id]}</span>
             </li>
           ))}
         </ul>
@@ -148,4 +147,6 @@ export default function HomePage() {
       </section>
     </div>
   );
-}
+};
+
+export default HomePage;
