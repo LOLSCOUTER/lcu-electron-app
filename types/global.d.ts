@@ -5,7 +5,11 @@ export {};
 declare global {
   interface Window {
     electronAPI: {
-      getClientStatus: () => Promise<ChampSelectInfo>;
+      setupLCUWatcher: () => void;
+      onChampSelectUpdate: (
+        cb: (session: ChampSelectInfo | null) => void
+      ) => void;
+      onLCUStatus: (cb: (connected: boolean) => void) => void;
     };
   }
 }

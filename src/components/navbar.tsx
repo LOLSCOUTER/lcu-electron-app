@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GearIcon, HomeIcon } from "@radix-ui/react-icons";
-import { AlertCircle, BarChart, PieChart, RefreshCw } from "lucide-react";
+import { BarChart, PieChart, RefreshCw } from "lucide-react";
 import clsx from "clsx";
-import { useState } from "react";
+import { useLCUStatus } from "@/context/LCUStatusProvider";
 
 const Navbar = () => {
   const pathname = usePathname();
-
-  const [isConnected, setIsConnected] = useState(false);
+  const { isConnected } = useLCUStatus();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-card h-16">
@@ -88,8 +87,9 @@ const Navbar = () => {
             type="button"
             className="inline-flex items-center gap-2 px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 text-sm"
             onClick={() => {
-              // 새로고침 동작 (예: 데이터 재요청)
-              console.log("새로고침 클릭됨");
+              if (window.electronAPI) {
+                window.electronAPI.setupLCUWatcher();
+              }
             }}
           >
             <RefreshCw className="h-4 w-4" />

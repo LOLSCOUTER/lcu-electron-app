@@ -1,6 +1,9 @@
+"use client";
+
 import TeamComposition from "./components/TeamComposition";
 import BenchChampions from "./components/BenchChampions";
 import { AlertCircle } from "lucide-react";
+import { useLCUStatus } from "@/context/LCUStatusProvider";
 
 const typeToKorean: Record<string, string> = {
   Burst: "버스트",
@@ -155,10 +158,10 @@ const benchChampions = [
 ];
 
 const Analysis = () => {
-  const isConnected = false;
+  const { status, isConnected } = useLCUStatus();
 
   return (
-    <div className="container py-4 h-[calc(100vh-4rem)]">
+    <div className="container py-4">
       <div className="grid gap-4 h-full">
         <div className="flex items-center justify-between">
           <div>
@@ -185,14 +188,8 @@ const Analysis = () => {
         )}
 
         <div className="grid grid-cols-2 gap-4 flex-1 overflow-hidden">
-          <TeamComposition
-            teamComposition={teamComposition}
-            typeToKorean={typeToKorean}
-          />
-          <BenchChampions
-            benchChampions={benchChampions}
-            typeToKorean={typeToKorean}
-          />
+          <TeamComposition status={status} />
+          <BenchChampions status={status} />
         </div>
       </div>
     </div>

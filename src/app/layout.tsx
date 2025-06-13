@@ -2,6 +2,7 @@ import Navbar from "@/components/navbar";
 
 import "../styles/globals.css";
 import { ThemeProvider } from "next-themes";
+import { LCUStatusProvider } from "@/context/LCUStatusProvider";
 
 export const metadata = {
   title: "롤 클라이언트 상태 모니터",
@@ -23,10 +24,12 @@ const RootLayout = ({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">{children}</main>
-          </div>
+          <LCUStatusProvider>
+            <div className="flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+            </div>
+          </LCUStatusProvider>
         </ThemeProvider>
       </body>
     </html>

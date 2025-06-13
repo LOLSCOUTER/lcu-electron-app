@@ -1,41 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChampSelectInfo } from "../../types/common";
 import { championIdMap } from "../../types/champion";
+import { useLCUStatus } from "@/context/LCUStatusProvider";
 
 const HomePage = () => {
-  const [status, setStatus] = useState<ChampSelectInfo>({
-    champions: null,
-    localCellId: null,
-    benchChampionIds: null,
-  });
+  const { status } = useLCUStatus();
 
   const [recommendation, setRecommendation] = useState<string[] | null>(null);
 
   useEffect(() => {
-    if (!window.electronAPI) {
-      console.log("electronAPI is undefined");
-      return;
-    }
-
-    const fetchStatus = async () => {
-      try {
-        const clientStatus = await window.electronAPI.getClientStatus();
-        setStatus(clientStatus);
-        console.log("LCU 상태 가져오기 성공:", clientStatus);
-      } catch (error) {
-        console.error("LCU 상태 가져오기 실패:", error);
-      }
-    };
-
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     const tryPrediction = async () => {
+      if (!status) return;
+
       const selectedNames =
         status.champions?.map((c) => championIdMap[c.championId]) || [];
       const benchNames =
@@ -76,7 +53,7 @@ const HomePage = () => {
           선택된 챔피언들
         </h3>
         <ul className="list-disc list-inside text-gray-300 space-y-2 max-h-64 overflow-y-auto">
-          {status.champions?.map((c, idx) => (
+          {status?.champions?.map((c, idx) => (
             <li
               key={`cell-${idx}`}
               className="hover:text-white transition-colors"
@@ -96,7 +73,7 @@ const HomePage = () => {
         <h3 className="text-green-400 text-xl font-bold mb-3 border-b border-green-600 pb-1">
           내가 픽한 챔피언
         </h3>
-        {status.champions && (
+        {status?.champions && (
           <p className="ml-2 text-gray-300 font-semibold text-lg">
             챔피언{" "}
             <span className="text-green-300 font-extrabold">
@@ -117,7 +94,7 @@ const HomePage = () => {
           벤치 챔피언
         </h3>
         <ul className="list-disc list-inside text-gray-300 space-y-2 max-h-40 overflow-y-auto">
-          {status.benchChampionIds?.map((id, idx) => (
+          {status?.benchChampionIds?.map((id, idx) => (
             <li
               className="text-purple-300 font-semibold hover:text-purple-100 transition-colors"
               key={`bench-${idx}`}

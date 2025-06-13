@@ -1,3 +1,5 @@
+"use client";
+
 import { TopChampionSection } from "./components/TopChampionSection";
 
 export default function StatisticsPage() {
@@ -33,7 +35,7 @@ export default function StatisticsPage() {
         games: 8900,
       },
       {
-        id: 26,
+        id: 100,
         name: "질리언",
         winRate: 56.5,
         image: "/champions/zilean.png",

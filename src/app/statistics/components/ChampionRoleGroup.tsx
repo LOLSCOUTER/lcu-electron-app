@@ -44,8 +44,8 @@ export const ChampionRoleGroup = ({
             name={champion.name}
             winRate={champion.winRate}
             games={champion.games}
-            imageUrl={`${process.env.CHAMP_IMG_BASE_URL}/${
-              championIdMap[champion.id][1]
+            imageUrl={`${process.env.NEXT_PUBLIC_CHAMP_IMG_BASE_URL}/${
+              championIdMap[champion.id]?.[1] ?? "Annie"
             }.png`}
           />
         ))}

@@ -1,44 +1,66 @@
-import { createWebSocketConnection } from "league-connect";
-import { ChampSelectInfo, ChampionInfo } from "../types/common";
+import {
+  authenticate,
+  createWebSocketConnection,
+  LeagueClient,
+  LeagueWebSocket,
+} from "league-connect";
+import { ChampSelectInfo } from "../types/common";
 
-export async function getClientStatus(): Promise<ChampSelectInfo> {
-  return new Promise(async (resolve) => {
-    const ws = await createWebSocketConnection({
-      authenticationOptions: {
-        awaitConnection: true,
-      },
+let ws: LeagueWebSocket | null = null;
+let client: LeagueClient;
+let latestSession: ChampSelectInfo | null = null;
+
+export const setupLCUWatcher = async (win: Electron.BrowserWindow) => {
+  const creds = await authenticate({
+    awaitConnection: true,
+    pollInterval: 1000,
+  });
+
+  client = new LeagueClient(creds, { pollInterval: 1000 });
+  client.start();
+
+  console.log("[Client Start]");
+
+  win.webContents.on("did-finish-load", () => {
+    client.on("connect", () => win.webContents.send("lcu-status", true));
+    client.on("disconnect", () => {
+      ws?.close();
+      win.webContents.send("lcu-status", false);
     });
 
-    console.log("[SUBSCRIBE] /lol-champ-select/v1/session");
-    ws.subscribe("/lol-champ-select/v1/session", (data: any) => {
-      if (!data) return;
+    subscribeChampSelect(win);
+  });
 
-      console.log(data);
+  await initWebSocket();
+};
 
-      const localCellId = data.localPlayerCellId;
+async function initWebSocket() {
+  if (ws) return;
 
-      const champions: ChampionInfo[] = data.myTeam.map(
-        (player: ChampionInfo) => ({
-          championId: player.championId,
-          cellId: player.cellId,
-        })
-      );
+  ws = await createWebSocketConnection({
+    authenticationOptions: { awaitConnection: true },
+    pollInterval: 1000,
+    maxRetries: -1,
+  });
 
-      const benchChampionIds = data.benchChampions.map(
-        (champ: any) => champ.championId
-      );
+  console.log("[Init Socket]");
+}
 
-      console.log(localCellId);
-      console.log(champions);
-      console.log(benchChampionIds);
+function subscribeChampSelect(win: Electron.BrowserWindow) {
+  if (!ws) return;
 
-      resolve({
-        champions: champions,
-        localCellId: localCellId,
-        benchChampionIds: benchChampionIds,
-      });
+  console.log("[Subscribe lol-champ-select]");
 
-      ws.close();
-    });
+  ws.subscribe("/lol-champ-select/v1/session", (data) => {
+    const localCellId = data.localPlayerCellId;
+    const champions = data.myTeam.map((p: any) => ({
+      championId: p.championId,
+      cellId: p.cellId,
+    }));
+
+    const bench = data.benchChampions.map((c: any) => c.championId);
+
+    latestSession = { localCellId, champions, benchChampionIds: bench };
+    win.webContents.send("champ-select-update", latestSession);
   });
 }

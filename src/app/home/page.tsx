@@ -1,9 +1,12 @@
+"use client";
+
 import { AlertCircle, BarChart, PieChart } from "lucide-react";
 import Card from "./components/Card";
 import Step from "./components/Step";
+import { useLCUStatus } from "@/context/LCUStatusProvider";
 
 const Home: React.FC = () => {
-  const isConnected = false;
+  const { isConnected } = useLCUStatus();
 
   return (
     <main className="container py-4 min-h-[calc(100vh-4rem)] flex flex-col">
