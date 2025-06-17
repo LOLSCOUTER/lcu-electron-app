@@ -33,7 +33,7 @@ const Home: React.FC = () => {
           </div>
         )}
 
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <Card
             title="챔피언 분석"
             description="팀 구성에 기반한 실시간 추천을 받아보세요"

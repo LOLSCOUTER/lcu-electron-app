@@ -1,32 +1,36 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupLCUWatcher = void 0;
+exports.isLCURunning = exports.setupLCUWatcher = void 0;
 const league_connect_1 = require("league-connect");
 let ws = null;
 let client;
 let latestSession = null;
 const setupLCUWatcher = async (win) => {
+    win.webContents.on("did-finish-load", async () => {
+        const running = await (0, exports.isLCURunning)();
+        win.webContents.send("lcu-status", running);
+    });
     const creds = await (0, league_connect_1.authenticate)({
         awaitConnection: true,
         pollInterval: 1000,
     });
     client = new league_connect_1.LeagueClient(creds, { pollInterval: 1000 });
     client.start();
-    console.log("[Client Start]");
-    win.webContents.on("did-finish-load", () => {
-        client.on("connect", () => win.webContents.send("lcu-status", true));
-        client.on("disconnect", () => {
-            ws?.close();
-            win.webContents.send("lcu-status", false);
-        });
-        subscribeChampSelect(win);
+    client.on("connect", async () => {
+        console.log("[Client Connected]");
+        win.webContents.send("lcu-status", true);
+        await (0, exports.setupLCUWatcher)(win);
+    });
+    client.on("disconnect", () => {
+        console.log("[Client Disconnected]");
+        ws?.close();
+        win.webContents.send("lcu-status", false);
     });
     await initWebSocket();
+    subscribeChampSelect(win);
 };
 exports.setupLCUWatcher = setupLCUWatcher;
 async function initWebSocket() {
-    if (ws)
-        return;
     ws = await (0, league_connect_1.createWebSocketConnection)({
         authenticationOptions: { awaitConnection: true },
         pollInterval: 1000,
@@ -34,6 +38,19 @@ async function initWebSocket() {
     });
     console.log("[Init Socket]");
 }
+const isLCURunning = async () => {
+    try {
+        await (0, league_connect_1.authenticate)({
+            awaitConnection: false,
+            pollInterval: 500,
+        });
+        return true;
+    }
+    catch {
+        return false;
+    }
+};
+exports.isLCURunning = isLCURunning;
 function subscribeChampSelect(win) {
     if (!ws)
         return;
@@ -46,7 +63,6 @@ function subscribeChampSelect(win) {
         }));
         const bench = data.benchChampions.map((c) => c.championId);
         latestSession = { localCellId, champions, benchChampionIds: bench };
-        console.log(latestSession);
         win.webContents.send("champ-select-update", latestSession);
     });
 }

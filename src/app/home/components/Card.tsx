@@ -14,12 +14,15 @@ const Card: React.FC<CardProps> = ({ title, description, icon, href }) => (
       <p className="text-xs text-muted-foreground mb-4">{description}</p>
     </div>
     <div className="flex justify-center mb-4">{icon}</div>
-    <Link
-      href={href}
-      className="inline-block text-sm font-medium text-salmon-600 hover:text-salmon-700"
-    >
-      {title} 시작하기
-    </Link>
+    <div className="flex justify-center">
+      <Link
+        href={href}
+        className="inline-block px-8 py-2 text-base font-semibold text-white bg-salmon-600 rounded-lg hover:bg-salmon-700 transition-colors"
+        prefetch={true}
+      >
+        {title} 시작하기
+      </Link>
+    </div>
   </div>
 );
 

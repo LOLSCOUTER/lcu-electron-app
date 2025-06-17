@@ -1,6 +1,7 @@
 import {
   authenticate,
   createWebSocketConnection,
+  Credentials,
   LeagueClient,
   LeagueWebSocket,
 } from "league-connect";
@@ -11,7 +12,12 @@ let client: LeagueClient;
 let latestSession: ChampSelectInfo | null = null;
 
 export const setupLCUWatcher = async (win: Electron.BrowserWindow) => {
-  const creds = await authenticate({
+  win.webContents.on("did-finish-load", async () => {
+    const running = await isLCURunning();
+    win.webContents.send("lcu-status", running);
+  });
+
+  const creds: Credentials = await authenticate({
     awaitConnection: true,
     pollInterval: 1000,
   });
@@ -19,24 +25,23 @@ export const setupLCUWatcher = async (win: Electron.BrowserWindow) => {
   client = new LeagueClient(creds, { pollInterval: 1000 });
   client.start();
 
-  console.log("[Client Start]");
+  client.on("connect", async () => {
+    console.log("[Client Connected]");
+    win.webContents.send("lcu-status", true);
+    await setupLCUWatcher(win);
+  });
 
-  win.webContents.on("did-finish-load", () => {
-    client.on("connect", () => win.webContents.send("lcu-status", true));
-    client.on("disconnect", () => {
-      ws?.close();
-      win.webContents.send("lcu-status", false);
-    });
-
-    subscribeChampSelect(win);
+  client.on("disconnect", () => {
+    console.log("[Client Disconnected]");
+    ws?.close();
+    win.webContents.send("lcu-status", false);
   });
 
   await initWebSocket();
+  subscribeChampSelect(win);
 };
 
 async function initWebSocket() {
-  if (ws) return;
-
   ws = await createWebSocketConnection({
     authenticationOptions: { awaitConnection: true },
     pollInterval: 1000,
@@ -45,6 +50,18 @@ async function initWebSocket() {
 
   console.log("[Init Socket]");
 }
+
+export const isLCURunning = async (): Promise<boolean> => {
+  try {
+    await authenticate({
+      awaitConnection: false,
+      pollInterval: 500,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 function subscribeChampSelect(win: Electron.BrowserWindow) {
   if (!ws) return;
