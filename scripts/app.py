@@ -70,7 +70,7 @@ def predict_top1():
             results.append({"champion": c, "winrate": round(prob * 100, 2)})
 
         results.sort(key=lambda x: x["winrate"], reverse=True)
-        return jsonify(results[:1])
+        return jsonify(results)
     except Exception as e:
         print(f"[EXCEPTION /predict/top1] {e}")
         return jsonify({"error": str(e)}), 500
