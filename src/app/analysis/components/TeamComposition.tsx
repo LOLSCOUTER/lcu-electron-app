@@ -40,7 +40,9 @@ const TeamComposition = ({ status }: TeamCompositionProps) => {
               </div>
               <div className="flex-1">
                 <div className="font-medium flex items-center gap-2 text-sm">
-                  {championIdMap[champion.championId][0]}
+                  {champion.championId
+                    ? championIdMap[champion.championId][0]
+                    : "챔피언"}
                   {champion.cellId === status.localCellId && (
                     <span className="bg-red-400 text-white rounded px-2 py-0.5 text-xs font-semibold">
                       나
@@ -51,7 +53,9 @@ const TeamComposition = ({ status }: TeamCompositionProps) => {
                   <div className="text-xs text-red-500">{champion.type}</div>
                 )} */}
                 <div className="text-xs text-gray-300">
-                  {championIdMap[champion.championId][1]}
+                  {champion.championId
+                    ? championIdMap[champion.championId][1]
+                    : "분류"}
                 </div>
               </div>
             </div>
