@@ -4,161 +4,76 @@ import TeamComposition from "./components/TeamComposition";
 import BenchChampions from "./components/BenchChampions";
 import { AlertCircle } from "lucide-react";
 import { useLCUStatus } from "@/context/LCUStatusProvider";
+import { usePredictTop1 } from "./hooks/usePredictTop1";
+import { usePredictTop5 } from "./hooks/usePredictTop5";
+import { championIdMap } from "../../../types/champion";
+import { useEffect, useState } from "react";
+import { ChampSelectInfo } from "../../../types/common";
 
-const typeToKorean: Record<string, string> = {
-  Burst: "버스트",
-  "Bruiser AP": "AP 브루저",
-  "DPS Marksman": "원거리 딜러",
-  Poke: "포크",
-  "Bruiser AD": "AD 브루저",
-  "Assassin AD": "AD 암살자",
-  "Sustain Mage": "지속 마법사",
-  "Utility Support": "유틸 서포터",
-  "CC Tank": "CC 탱커",
-  "Sustain Tank": "지속 탱커",
-};
-
-const teamComposition = [
-  {
-    id: 1,
-    name: "럭스",
-    selected: true,
-    image: "/champions/lux.png",
-    type: "Burst",
-    summonerName: "소환사1",
-    isMe: false,
-  },
-  {
-    id: 2,
-    name: "이즈리얼",
-    selected: true,
-    image: "/champions/ezreal.png",
-    type: "Poke",
-    summonerName: "소환사2",
-    isMe: false,
-  },
-  {
-    id: 3,
-    name: "레오나",
-    selected: true,
-    image: "/champions/leona.png",
-    type: "CC Tank",
-    summonerName: "소환사3",
-    isMe: false,
-  },
-  {
-    id: 4,
-    name: "다리우스",
-    selected: true,
-    image: "/champions/darius.png",
-    type: "Bruiser AD",
-    summonerName: "소환사4",
-    isMe: false,
-  },
-  {
-    id: 5,
-    name: "가렌",
-    selected: true,
-    image: "/champions/garen.png",
-    type: "Bruiser AD",
-    summonerName: "소환사5",
-    isMe: true,
-  },
-];
-
-const benchChampions = [
-  {
-    id: 1,
-    name: "아무무",
-    image: "/champions/amumu.png",
-    type: "CC Tank",
-    score: 95,
-    recommended: true,
-  },
-  {
-    id: 2,
-    name: "세주아니",
-    image: "/champions/sejuani.png",
-    type: "CC Tank",
-    score: 90,
-    recommended: false,
-  },
-  {
-    id: 3,
-    name: "자크",
-    image: "/champions/zac.png",
-    type: "CC Tank",
-    score: 85,
-    recommended: false,
-  },
-  {
-    id: 4,
-    name: "말파이트",
-    image: "/champions/malphite.png",
-    type: "CC Tank",
-    score: 80,
-    recommended: false,
-  },
-  {
-    id: 5,
-    name: "카직스",
-    image: "/champions/khazix.png",
-    type: "Assassin AD",
-    score: 65,
-    recommended: false,
-  },
-  {
-    id: 5,
-    name: "카직스",
-    image: "/champions/khazix.png",
-    type: "Assassin AD",
-    score: 65,
-    recommended: false,
-  },
-  {
-    id: 5,
-    name: "카직스",
-    image: "/champions/khazix.png",
-    type: "Assassin AD",
-    score: 65,
-    recommended: false,
-  },
-  {
-    id: 5,
-    name: "카직스",
-    image: "/champions/khazix.png",
-    type: "Assassin AD",
-    score: 65,
-    recommended: false,
-  },
-  {
-    id: 5,
-    name: "카직스",
-    image: "/champions/khazix.png",
-    type: "Assassin AD",
-    score: 65,
-    recommended: false,
-  },
-  {
-    id: 5,
-    name: "카직스",
-    image: "/champions/khazix.png",
-    type: "Assassin AD",
-    score: 65,
-    recommended: false,
-  },
-  {
-    id: 5,
-    name: "카직스",
-    image: "/champions/khazix.png",
-    type: "Assassin AD",
-    score: 65,
-    recommended: false,
-  },
-];
+// const status: ChampSelectInfo = {
+//   benchChampionIds: [221, 56, 28],
+//   champions: [
+//     { championId: 161, cellId: 0 },
+//     { championId: 143, cellId: 1 },
+//     { championId: 68, cellId: 2 },
+//     { championId: 157, cellId: 3 },
+//     { championId: 6, cellId: 4 },
+//   ],
+//   localCellId: 3,
+// };
 
 const Analysis = () => {
   const { status, isConnected } = useLCUStatus();
+
+  const [fixed, setFixed] = useState<string[]>([]);
+  const [candidates, setCandidates] = useState<string[]>([]);
+  const [pool, setPool] = useState<string[]>([]);
+
+  console.log(status);
+
+  useEffect(() => {
+    if (status && status.champions) {
+      const localCellId = status.localCellId;
+      const fixedIds = status.champions
+        .filter((c) => c.cellId !== localCellId)
+        .map((c) => c.championId);
+
+      const benchIds = status.benchChampionIds ?? [];
+      const candidateIds =
+        status.benchChampionIds ??
+        []
+          .filter((b) => b !== localCellId && !benchIds.includes(b))
+          .map((b) => b);
+
+      const poolIds = [...new Set([...fixedIds, ...candidateIds, ...benchIds])];
+
+      setFixed(
+        fixedIds
+          .map((id) => championIdMap[id]?.[1])
+          .filter((name): name is string => !!name)
+          .map((n) => n.toLowerCase())
+      );
+      setCandidates(
+        candidateIds
+          .map((id) => championIdMap[id]?.[1])
+          .filter((name): name is string => !!name)
+          .map((n) => n.toLowerCase())
+      );
+      setPool(
+        poolIds
+          .map((id) => championIdMap[id]?.[1])
+          .filter((name): name is string => !!name)
+          .map((n) => n.toLowerCase())
+      );
+    }
+  }, [status]);
+
+  const {
+    result,
+    loading: loading1,
+    error: error1,
+  } = usePredictTop1(fixed, candidates);
+  const { results, loading: loading5, error: error5 } = usePredictTop5(pool);
 
   return (
     <div className="container py-4">
@@ -189,7 +104,7 @@ const Analysis = () => {
 
         <div className="grid grid-cols-2 gap-4 flex-1 overflow-hidden">
           <TeamComposition status={status} />
-          <BenchChampions status={status} />
+          <BenchChampions status={status} result={result ?? []} />
         </div>
       </div>
     </div>

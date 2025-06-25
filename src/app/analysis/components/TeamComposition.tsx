@@ -4,9 +4,10 @@ import { ChampSelectInfo } from "../../../../types/common";
 
 interface TeamCompositionProps {
   status: ChampSelectInfo | null;
+  loading?: boolean;
 }
 
-const TeamComposition = ({ status }: TeamCompositionProps) => {
+const TeamComposition = ({ status, loading }: TeamCompositionProps) => {
   return (
     <div className="flex flex-col h-full border rounded-lg bg-zinc-100 dark:bg-zinc-800 shadow p-4">
       <div className="pb-3 border-b">
