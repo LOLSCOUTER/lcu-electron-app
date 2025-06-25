@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pandas as pd
 import pickle
 import itertools
 
 app = Flask(__name__)
+
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 with open("model/team_model_v5.pkl", "rb") as f:
     model = pickle.load(f)
@@ -46,6 +49,9 @@ def build_team_vector(champion_list):
     vector = {**stat_means, **role_distribution}
     return pd.DataFrame([vector])
 
+def remap_winrate(prob, min_val=40, max_val=60):
+    return round(min_val + (max_val - min_val) * prob, 2)
+
 @app.route("/predict/top1", methods=["POST"])
 def predict_top1():
     try:
@@ -67,7 +73,8 @@ def predict_top1():
             if vec is None:
                 continue
             prob = model.predict_proba(vec)[0][1]
-            results.append({"champion": c, "winrate": round(prob * 100, 2)})
+            winrate = remap_winrate(prob)
+            results.append({"champion": c, "winrate": winrate})
 
         results.sort(key=lambda x: x["winrate"], reverse=True)
         return jsonify(results)
@@ -90,7 +97,8 @@ def predict_top5():
             if vec is None:
                 continue
             prob = model.predict_proba(vec)[0][1]
-            results.append({"team": list(team), "winrate": round(prob * 100, 2)})
+            winrate = remap_winrate(prob)
+            results.append({"team": list(team), "winrate": winrate})
 
         results.sort(key=lambda x: x["winrate"], reverse=True)
         return jsonify(results[:5])
